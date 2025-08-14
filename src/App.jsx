@@ -162,14 +162,13 @@ export default function App() {
           <section className="bg-gray-800 rounded-3xl shadow-lg p-8">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
               <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
-                🏆 Pontuação Geral
+                 Pontuação Geral
               </h2>
 
               {!isAdmin ? (
                 <button
                   onClick={pedirSenha}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-md transition duration-300"
-                  aria-label="Entrar como administrador"
                 >
                   🔒 Admin
                 </button>
@@ -178,7 +177,6 @@ export default function App() {
                   <label
                     htmlFor="file-input"
                     className="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition duration-300"
-                    aria-label="Selecionar arquivo de resultados"
                   >
                     📂 Importar TXT
                     <input
@@ -193,7 +191,6 @@ export default function App() {
                   <button
                     onClick={zerarPontuacoes}
                     className="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition duration-300"
-                    aria-label="Zerar pontuações e apostas"
                   >
                     ♻️ Zerar Tudo
                   </button>
@@ -201,7 +198,6 @@ export default function App() {
                   <button
                     onClick={apagarPalpitesRodada}
                     className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-5 py-2 rounded-lg shadow-md transition duration-300"
-                    aria-label="Apagar apenas palpites"
                   >
                     🗑 Apagar Palpites da Rodada
                   </button>
@@ -210,17 +206,63 @@ export default function App() {
             </div>
 
             {Object.keys(pontuacaoFinal).length > 0 ? (
-              <ul className="max-w-md mx-auto divide-y divide-gray-700 rounded-lg bg-gray-700 shadow-inner">
-                {Object.entries(pontuacaoFinal).map(([nome, pontos]) => (
-                  <li
-                    key={nome}
-                    className="flex justify-between px-6 py-3 font-medium text-gray-100 hover:bg-gray-600 transition rounded-t-md"
-                  >
-                    <span>{nome}</span>
-                    <span className="text-indigo-400 font-bold">{pontos} pts</span>
-                  </li>
-                ))}
-              </ul>
+              (() => {
+                const ranking = Object.entries(pontuacaoFinal).sort((a, b) => b[1] - a[1]);
+                const top3 = ranking.slice(0, 3);
+                const resto = ranking.slice(3);
+
+                return (
+                  <div className="flex flex-col items-center">
+                    {/* Pódio */}
+                    <div className="flex items-end gap-6 mb-10">
+                      {top3[1] && (
+                        <div className="flex flex-col items-center">
+                          <div className="bg-gray-600 rounded-t-lg w-20 h-32 flex items-center justify-center text-2xl font-bold">
+                            🥈
+                          </div>
+                          <p className="mt-2 font-semibold">{top3[1][0]}</p>
+                          <p className="text-indigo-400">{top3[1][1]} pts</p>
+                        </div>
+                      )}
+
+                      {top3[0] && (
+                        <div className="flex flex-col items-center">
+                          <div className="bg-yellow-500 rounded-t-lg w-20 h-40 flex items-center justify-center text-2xl font-bold">
+                            🥇
+                          </div>
+                          <p className="mt-2 font-semibold">{top3[0][0]}</p>
+                          <p className="text-yellow-300 font-bold">{top3[0][1]} pts</p>
+                        </div>
+                      )}
+
+                      {top3[2] && (
+                        <div className="flex flex-col items-center">
+                          <div className="bg-orange-500 rounded-t-lg w-20 h-28 flex items-center justify-center text-2xl font-bold">
+                            🥉
+                          </div>
+                          <p className="mt-2 font-semibold">{top3[2][0]}</p>
+                          <p className="text-orange-300">{top3[2][1]} pts</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Lista restante */}
+                    {resto.length > 0 && (
+                      <ul className="max-w-md w-full divide-y divide-gray-700 rounded-lg bg-gray-700 shadow-inner">
+                        {resto.map(([nome, pontos]) => (
+                          <li
+                            key={nome}
+                            className="flex justify-between px-6 py-3 font-medium text-gray-100 hover:bg-gray-600 transition"
+                          >
+                            <span>{nome}</span>
+                            <span className="text-indigo-400 font-bold">{pontos} pts</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })()
             ) : (
               <p className="text-center text-gray-400 italic">Nenhuma pontuação registrada ainda.</p>
             )}

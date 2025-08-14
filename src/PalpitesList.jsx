@@ -52,7 +52,7 @@ export default function PalpitesList({ atualizar }) {
 
   return (
     <section className="max-w-4xl mx-auto p-4 sm:p-6 bg-gray-900 rounded-3xl shadow-lg">
-      <h2 className="text-3xl font-bold text-center mb-8 text-indigo-400">
+      <h2 className="text-3xl font-bold text-center mb-8 text-white-400">
          Palpites por Apostador
       </h2>
 
