@@ -36,12 +36,6 @@ export default function PalpitesList({ atualizar }) {
 
   const extrairClubes = (jogo) => jogo.split(" x ").map((clube) => clube.trim());
 
-  const formatarHora = (dataFirebase) => {
-    if (!dataFirebase) return "";
-    const dateObj = dataFirebase.toDate ? dataFirebase.toDate() : new Date(dataFirebase);
-    return dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
   if (carregando)
     return (
       <p className="mt-6 text-center text-gray-400 animate-pulse text-lg select-none">
@@ -57,50 +51,63 @@ export default function PalpitesList({ atualizar }) {
     );
 
   return (
-    <section className="max-w-5xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8">
-      <h2 className="text-4xl font-extrabold text-indigo-600 mb-10 text-center select-none">
-        📋 Palpites por Apostador
+    <section className="max-w-4xl mx-auto p-4 sm:p-6 bg-gray-900 rounded-3xl shadow-lg">
+      <h2 className="text-3xl font-bold text-center mb-8 text-indigo-400">
+         Palpites por Apostador
       </h2>
 
       {Object.entries(palpites).map(([apostador, lista]) => (
-        <div key={apostador} className="mb-12">
-          <h3 className="text-2xl font-semibold mb-6 text-gray-700 dark:text-gray-300 border-b border-indigo-400 pb-2 select-none">
-            {apostador}
-          </h3>
+        <div key={apostador} className="mb-10">
+          {/* Nome do apostador com linha abaixo */}
+          <h3 className="text-xl font-semibold text-white mb-1">{apostador}</h3>
+          <div className="border-b border-gray-700 mb-4"></div>
 
-          <ul className="space-y-5">
+          <ul className="space-y-4">
             {lista.map((palpite) => {
               const clubes = extrairClubes(palpite.jogo);
-              const hora = formatarHora(palpite.data);
+
+              // Formatar data/hora de forma legível
+              const horario = palpite.data?.toDate
+                ? palpite.data.toDate().toLocaleString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "";
 
               return (
                 <li
                   key={palpite.id}
-                  className="bg-indigo-50 dark:bg-gray-800 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md hover:shadow-indigo-500 transition-shadow"
+                  className="bg-gray-800 text-white rounded-lg shadow-md flex flex-col sm:flex-row items-center justify-between p-3 sm:p-4 gap-3 sm:gap-0"
                 >
-                  {/* Clube A */}
-                  <div className="flex items-center gap-3 min-w-[110px] flex-shrink-0">
+                  {/* Time A */}
+                  <div className="flex items-center gap-2 min-w-[80px] sm:min-w-[100px]">
                     <img
                       src={getLogo(clubes[0])}
                       alt={`${clubes[0]} logo`}
                       className="w-8 h-8 object-contain"
                       loading="lazy"
                     />
-                    <span className="font-semibold text-indigo-900 dark:text-indigo-300 truncate max-w-[90px]">
-                      {clubes[0]}
-                    </span>
+                    <span className="truncate">{clubes[0]}</span>
                   </div>
 
-                  {/* Placar */}
-                  <div className="text-2xl font-bold bg-indigo-600 text-white rounded-lg px-6 py-1 min-w-[80px] text-center flex-shrink-0 shadow">
-                    {palpite.golsA} x {palpite.golsB}
+                  {/* Palpite no centro */}
+                  <div className="flex flex-col items-center">
+                    <div className="text-lg sm:text-xl font-bold bg-indigo-600 px-4 py-1 rounded">
+                      {palpite.golsA} x {palpite.golsB}
+                    </div>
+                    {horario && (
+                      <span className="text-gray-400 text-xs mt-1 select-none">
+                        {horario}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Clube B */}
-                  <div className="flex items-center gap-3 min-w-[110px] flex-shrink-0 justify-end">
-                    <span className="font-semibold text-indigo-900 dark:text-indigo-300 truncate max-w-[90px]">
-                      {clubes[1]}
-                    </span>
+                  {/* Time B */}
+                  <div className="flex items-center gap-2 min-w-[80px] sm:min-w-[100px] justify-end">
+                    <span className="truncate">{clubes[1]}</span>
                     <img
                       src={getLogo(clubes[1])}
                       alt={`${clubes[1]} logo`}
@@ -108,17 +115,6 @@ export default function PalpitesList({ atualizar }) {
                       loading="lazy"
                     />
                   </div>
-
-                  {/* Hora */}
-                  {hora && (
-                    <time
-                      dateTime={palpite.data?.toDate?.().toISOString() || ""}
-                      className="text-indigo-500 font-mono text-sm text-center min-w-[50px] flex-shrink-0 select-none"
-                      aria-label={`Hora do palpite: ${hora}`}
-                    >
-                      {hora}
-                    </time>
-                  )}
                 </li>
               );
             })}
