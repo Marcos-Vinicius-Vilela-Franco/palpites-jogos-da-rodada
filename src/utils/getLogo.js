@@ -17,7 +17,7 @@ export function getLogo(clube) {
     "Palmeiras": "Palmeiras.png",
     "Bragantino": "Red-Bull-Bragantino.png",
     "Santos": "Santos.png",
-    "São Paulo": "Sao-Paulo.png",
+    "São Paulo": "São-Paulo.png",
     "Sport": "Sport-Recife.png",
     "Vasco": "Vasco-da-Gama.png",
     "Vitória": "Vitória.png"
