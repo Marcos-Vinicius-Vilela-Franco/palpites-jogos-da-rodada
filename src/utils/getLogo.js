@@ -20,7 +20,7 @@ export function getLogo(clube) {
     "São Paulo": "Sao-Paulo.png",
     "Sport": "Sport-Recife.png",
     "Vasco": "Vasco-da-Gama.png",
-    "Vitória": "Vitoria.png"
+    "Vitória": "Vitória.png"
   };
 
   if (mapaClubes[clube]) {
