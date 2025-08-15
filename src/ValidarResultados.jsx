@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { db } from "./firebase";
-import { collection, setDoc, doc } from "firebase/firestore";
+import { collection, setDoc, doc, getDocs, deleteDoc } from "firebase/firestore";
 
 const API_KEY = import.meta.env.VITE_API_FUTEBOL_TOKEN;
 const API_URL = "https://api.api-futebol.com.br/v1/campeonatos/2/jogos"; // Série A
@@ -10,7 +10,7 @@ export default function ValidarResultados() {
   const [mensagem, setMensagem] = useState("");
 
   const validarResultados = async () => {
-    if (senha !== "1234") { // senha exemplo
+    if (senha !== "1234") {
       setMensagem("❌ Senha incorreta!");
       return;
     }
@@ -28,7 +28,10 @@ export default function ValidarResultados() {
 
       // Salvar resultados no Firestore
       for (const jogo of data.jogos) {
-        if (jogo.placar_oficial_mandante !== null && jogo.placar_oficial_visitante !== null) {
+        if (
+          jogo.placar_oficial_mandante !== null &&
+          jogo.placar_oficial_visitante !== null
+        ) {
           const jogoId = `${jogo.time_mandante.nome} x ${jogo.time_visitante.nome}`;
           await setDoc(doc(db, "resultados", jogoId), {
             jogo: jogoId,
@@ -45,6 +48,27 @@ export default function ValidarResultados() {
     } catch (error) {
       console.error(error);
       setMensagem("❌ Erro ao validar resultados.");
+    }
+  };
+
+  const apagarPalpitesRodada = async () => {
+    if (senha !== "1234") {
+      setMensagem("❌ Senha incorreta!");
+      return;
+    }
+
+    try {
+      const querySnapshot = await getDocs(collection(db, "palpites"));
+      const promises = [];
+      querySnapshot.forEach((docSnap) => {
+        promises.push(deleteDoc(docSnap.ref));
+      });
+
+      await Promise.all(promises);
+      setMensagem("✅ Todos os palpites da rodada foram apagados!");
+    } catch (error) {
+      console.error(error);
+      setMensagem("❌ Erro ao apagar palpites.");
     }
   };
 
@@ -76,9 +100,16 @@ export default function ValidarResultados() {
 
       <button
         onClick={validarResultados}
-        className="w-full bg-green-600 hover:bg-green-700 py-3 rounded text-white font-semibold"
+        className="w-full bg-green-600 hover:bg-green-700 py-3 rounded text-white font-semibold mb-3"
       >
         Validar Resultados
+      </button>
+
+      <button
+        onClick={apagarPalpitesRodada}
+        className="w-full bg-red-600 hover:bg-red-700 py-3 rounded text-white font-semibold"
+      >
+        Apagar Palpites da Rodada
       </button>
     </div>
   );
