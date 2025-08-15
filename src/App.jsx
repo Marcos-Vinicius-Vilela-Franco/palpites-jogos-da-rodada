@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { 
-  collection, getDocs, addDoc, doc, serverTimestamp, deleteDoc 
+import {
+  collection, getDocs, addDoc, doc, serverTimestamp, deleteDoc
 } from "firebase/firestore";
 import { db } from "./firebase";
 import PalpiteForm from "./PalpiteForm";
@@ -13,7 +13,6 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [atualizar, setAtualizar] = useState(false);
 
-  // Função para carregar as pontuações
   const carregarPontuacoes = useCallback(async () => {
     try {
       const snapshot = await getDocs(collection(db, "resultados"));
@@ -38,7 +37,6 @@ export default function App() {
     carregarPontuacoes();
   }, [carregarPontuacoes, atualizar]);
 
-  // Função para validar resultados a partir do arquivo TXT
   async function validarResultados(file) {
     if (!file) return;
 
@@ -87,8 +85,6 @@ export default function App() {
 
       setPontuacaoFinal(novaPontuacao);
       alert("✅ Resultados validados e atualizados com sucesso!");
-
-      // Recarregar página
       window.location.reload();
     } catch (error) {
       console.error("Erro na validação dos resultados:", error);
@@ -96,16 +92,13 @@ export default function App() {
     }
   }
 
-  // Função para zerar pontuações e apostas
   async function zerarPontuacoes() {
     if (!confirm("⚠️ Deseja realmente zerar TODAS as pontuações e apostas?")) return;
 
     try {
-      // Apaga todos os documentos da coleção resultados
       const resultadosSnap = await getDocs(collection(db, "resultados"));
       const deletarResultados = resultadosSnap.docs.map((docu) => deleteDoc(doc(db, "resultados", docu.id)));
 
-      // Apaga todos os documentos da coleção palpites
       const palpitesSnap = await getDocs(collection(db, "palpites"));
       const deletarPalpites = palpitesSnap.docs.map((docu) => deleteDoc(doc(db, "palpites", docu.id)));
 
@@ -113,8 +106,6 @@ export default function App() {
 
       setPontuacaoFinal({});
       alert("♻️ Todas as pontuações e apostas foram zeradas com sucesso!");
-
-      // Recarregar página
       window.location.reload();
     } catch (error) {
       console.error("Erro ao zerar pontuações/apostas:", error);
@@ -122,7 +113,24 @@ export default function App() {
     }
   }
 
-  // Função para pedir senha admin
+  async function apagarPalpitesRodada() {
+    if (!confirm("⚠️ Deseja realmente apagar TODOS os palpites da rodada?")) return;
+
+    try {
+      const palpitesSnap = await getDocs(collection(db, "palpites"));
+      const deletarPalpites = palpitesSnap.docs.map((docu) =>
+        deleteDoc(doc(db, "palpites", docu.id))
+      );
+
+      await Promise.all(deletarPalpites);
+      alert("✅ Todos os palpites da rodada foram apagados!");
+      setAtualizar(v => !v);
+    } catch (error) {
+      console.error("Erro ao apagar palpites:", error);
+      alert("❌ Não foi possível apagar os palpites.");
+    }
+  }
+
   function pedirSenha() {
     const senha = prompt("Digite a senha de administrador:");
     if (senha === ADMIN_PASSWORD) {
@@ -133,80 +141,150 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-teal-50 via-blue-50 to-indigo-100 py-10 px-6">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-900 py-20 px-4 text-gray-100">
+      <div className="max-w-7xl mx-auto">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-extrabold text-indigo-900 mb-2">Palpita Bola ⚽</h1>
-          <p className="text-indigo-700 text-lg font-medium">
+          <h1 className="text-5xl font-extrabold text-white mb-2">Palpita Bola ⚽</h1>
+          <p className="text-gray-300 text-lg font-medium">
             Faça seu palpite e acompanhe a pontuação geral em tempo real!
           </p>
         </header>
 
-        <main className="space-y-10">
-          <section className="bg-white rounded-3xl shadow-lg p-8">
-            <PalpiteForm onPalpiteSalvo={() => setAtualizar((v) => !v)} />
-          </section>
+        <main className="flex flex-col space-y-8 items-center">
+          {/* Topo da tela: Formulário e Ranking */}
+          <div className="flex flex-col md:flex-row md:gap-8 space-y-8 md:space-y-0 w-full justify-center">
 
-          <section className="bg-white rounded-3xl shadow-lg p-8">
-            <PalpitesList atualizar={atualizar} />
-          </section>
-
-          <section className="bg-white rounded-3xl shadow-lg p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-              <h2 className="text-2xl font-semibold text-indigo-900 flex items-center gap-2">
-                🏆 Pontuação Geral
+            {/* Formulário de Palpites */}
+            <section className="bg-gray-800 rounded-3xl shadow-xl p-6 md:p-8 flex-1 md:max-w-md">
+              <h2 className="text-2xl font-semibold text-white mb-6">
+                 Faça seu Palpite
               </h2>
+              <PalpiteForm onPalpiteSalvo={() => setAtualizar((v) => !v)} />
 
-              {!isAdmin ? (
-                <button
-                  onClick={pedirSenha}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-md transition duration-300"
-                  aria-label="Entrar como administrador"
-                >
-                  🔒 Admin
-                </button>
-              ) : (
-                <div className="flex flex-wrap gap-4">
-                  <label
-                    htmlFor="file-input"
-                    className="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition duration-300"
-                    aria-label="Selecionar arquivo de resultados"
-                  >
-                    📂 Importar TXT
-                    <input
-                      id="file-input"
-                      type="file"
-                      accept=".txt"
-                      onChange={(e) => validarResultados(e.target.files[0])}
-                      className="hidden"
-                    />
-                  </label>
-                  <button
-                    onClick={zerarPontuacoes}
-                    className="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition duration-300"
-                    aria-label="Zerar pontuações e apostas"
-                  >
-                    ♻️ Zerar Tudo
-                  </button>
+              {isAdmin && (
+                <div className="mt-8 pt-6 border-t border-gray-700">
+                  <h3 className="text-xl font-semibold text-white mb-4">Área do Administrador</h3>
+                  <div className="flex flex-wrap gap-4">
+                    <label
+                      htmlFor="file-input"
+                      className="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-full shadow-md transition duration-300 flex-1 text-center"
+                    >
+                      📂 Importar TXT
+                      <input
+                        id="file-input"
+                        type="file"
+                        accept=".txt"
+                        onChange={(e) => validarResultados(e.target.files[0])}
+                        className="hidden"
+                      />
+                    </label>
+                    <button
+                      onClick={zerarPontuacoes}
+                      className="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2 rounded-full shadow-md transition duration-300 flex-1 text-center"
+                    >
+                      ♻️ Zerar Tudo
+                    </button>
+                    <button
+                      onClick={apagarPalpitesRodada}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-5 py-2 rounded-full shadow-md transition duration-300 flex-1 text-center"
+                    >
+                      🗑 Apagar Palpites da Rodada
+                    </button>
+                  </div>
                 </div>
               )}
-            </div>
+            </section>
 
-            {Object.keys(pontuacaoFinal).length > 0 ? (
-              <ul className="max-w-md mx-auto divide-y divide-indigo-300 rounded-lg bg-indigo-50 shadow-inner">
-                {Object.entries(pontuacaoFinal).map(([nome, pontos]) => (
-                  <li
-                    key={nome}
-                    className="flex justify-between px-6 py-3 font-medium text-indigo-900 hover:bg-indigo-100 transition rounded-t-md"
+            {/* Ranking e Pontuação */}
+            <section className="bg-gray-800 rounded-3xl shadow-xl p-6 md:p-8 flex-1 flex flex-col items-center justify-center relative md:max-w-md">
+              <div className="flex justify-between items-center mb-6 w-full absolute top-6 left-0 right-0 p-6 z-10">
+                <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
+                   Ranking Geral
+                </h2>
+                {!isAdmin && (
+                  <button
+                    onClick={pedirSenha}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-full shadow-md transition duration-300 text-sm"
                   >
-                    <span>{nome}</span>
-                    <span className="text-indigo-600 font-bold">{pontos} pts</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-center text-indigo-400 italic">Nenhuma pontuação registrada ainda.</p>
-            )}
+                    🔒 Admin
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-24 w-full flex flex-col items-center justify-center">
+                {Object.keys(pontuacaoFinal).length > 0 ? (
+                  (() => {
+                    const ranking = Object.entries(pontuacaoFinal).sort(([, a], [, b]) => b - a);
+                    const top3 = ranking.slice(0, 3);
+                    const resto = ranking.slice(3);
+
+                    return (
+                      <div className="flex flex-col items-center w-full justify-center">
+                        {/* Pódio */}
+                        <div className="flex items-end gap-6 mb-10">
+                          {top3[1] && (
+                            <div className="flex flex-col items-center">
+                              <div className="bg-gray-600 rounded-t-lg w-20 h-24 flex items-center justify-center text-2xl font-bold">
+                                🥈
+                              </div>
+                              <p className="mt-2 font-semibold text-center">{top3[1][0]}</p>
+                              <p className="text-indigo-400">{top3[1][1]} pts</p>
+                            </div>
+                          )}
+
+                          {top3[0] && (
+                            <div className="flex flex-col items-center">
+                              <div className="bg-yellow-500 rounded-t-lg w-20 h-28 flex items-center justify-center text-2xl font-bold">
+                                🥇
+                              </div>
+                              <p className="mt-2 font-semibold text-center">{top3[0][0]}</p>
+                              <p className="text-yellow-300 font-bold">{top3[0][1]} pts</p>
+                            </div>
+                          )}
+
+                          {top3[2] && (
+                            <div className="flex flex-col items-center">
+                              <div className="bg-orange-500 rounded-t-lg w-20 h-20 flex items-center justify-center text-2xl font-bold">
+                                🥉
+                              </div>
+                              <p className="mt-2 font-semibold text-center">{top3[2][0]}</p>
+                              <p className="text-orange-300">{top3[2][1]} pts</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Lista restante */}
+                        {resto.length > 0 && (
+                          <ul className="max-w-md w-full divide-y divide-gray-700 rounded-lg bg-gray-700 shadow-inner mt-6">
+                            {resto.map(([nome, pontos]) => (
+                              <li
+                                key={nome}
+                                className="flex justify-between px-6 py-3 font-medium text-gray-100 hover:bg-gray-600 transition"
+                              >
+                                <span>{nome}</span>
+                                <span className="text-indigo-400 font-bold">{pontos} pts</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <p className="text-center text-gray-400 italic">Nenhuma pontuação registrada ainda.</p>
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* Lista de Palpites (abaixo do Form e Ranking) */}
+          <section className="bg-gray-800 rounded-3xl shadow-xl p-6 md:p-8 w-full md:w-10/12 mx-auto">
+            <h2 className="text-2xl font-semibold text-white mb-6">
+               Palpites Atuais
+            </h2>
+            <div className="flex-1 overflow-auto">
+              <PalpitesList atualizar={atualizar} />
+            </div>
           </section>
         </main>
       </div>
